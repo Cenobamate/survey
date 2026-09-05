@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>翼思生物 · 市场调研问卷平台</title>
+  <style>
+    /* ===== 全局样式 ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #1a3a5c;       /* 深蓝主色 */
+      --primary-light: #2c5282;
+      --accent: #e8732a;        /* 翼思橙 */
+      --accent-light: #f0a060;
+      --bg: #f5f7fa;
+      --card: #ffffff;
+      --text: #2d3748;
+      --text-light: #718096;
+      --border: #e2e8f0;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    /* ===== 顶部导航 ===== */
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: #fff;
+      padding: 20px 16px;
+      text-align: center;
+    }
+    .header h1 { font-size: 1.4rem; font-weight: 600; }
+    .header p { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; }
+    .header .logo {
+      display: inline-block;
+      font-size: 1.6rem;
+      margin-bottom: 4px;
+    }
+    /* ===== 主内容区 ===== */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+    }
+    .section-title {
+      font-size: 1.1rem;
+      color: var(--primary);
+      font-weight: 600;
+      margin-bottom: 16px;
+      padding-left: 12px;
+      border-left: 4px solid var(--accent);
+    }
+    /* ===== 产品卡片 ===== */
+    .product-card {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 20px;
+      transition: transform 0.2s;
+    }
+    .product-card:active { transform: scale(0.98); }
+    .product-header {
+      padding: 20px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .product-header.cnb { background: linear-gradient(135deg, #1a3a5c 0%, #2c5282 100%); }
+    .product-header.sol { background: linear-gradient(135deg, #b85c1f 0%, #e8732a 100%); }
+    .product-icon {
+      width: 48px; height: 48px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .product-info h2 { font-size: 1.15rem; font-weight: 600; }
+    .product-info p { font-size: 0.8rem; opacity: 0.85; }
+    .product-body { padding: 16px 20px 20px; }
+    .mode-btn-group { display: flex; flex-direction: column; gap: 10px; }
+    .mode-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .mode-btn.real { background: var(--primary); color: #fff; }
+    .mode-btn.anon { background: var(--bg); color: var(--text); border: 1.5px solid var(--border); }
+    .mode-btn:active { opacity: 0.85; }
+    .mode-btn .arrow { font-size: 1.2rem; }
+    .mode-btn .label-sub { font-size: 0.75rem; font-weight: 400; opacity: 0.8; }
+    /* ===== 管理后台入口 ===== */
+    .admin-entry {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 32px;
+      padding: 14px;
+      background: var(--card);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      text-decoration: none;
+      color: var(--text-light);
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .admin-entry:active { background: var(--bg); }
+    .admin-entry .icon { font-size: 1.1rem; }
+    /* ===== 底部 ===== */
+    .footer {
+      text-align: center;
+      padding: 24px 16px;
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+    .footer a { color: var(--primary); text-decoration: none; }
+    /* ===== 响应式 ===== */
+    @media (min-width: 768px) {
+      .header h1 { font-size: 1.6rem; }
+      .container { padding: 32px 16px 80px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== 顶部导航 ===== -->
+  <div class="header">
+    <div class="logo">🔬</div>
+    <h1>翼思生物 · 市场调研问卷平台</h1>
+    <p>Ignis Therapeutics — CNB & SOL 产品调研</p>
+  </div>
+
+  <!-- ===== 主内容区 ===== -->
+  <div class="container">
+
+    <div class="section-title">选择问卷</div>
+
+    <!-- ===== CNB 产品问卷 ===== -->
+    <div class="product-card">
+      <div class="product-header cnb">
+        <div class="product-icon">💊</div>
+        <div class="product-info">
+          <h2>西诺氨酯（翼弗瑞®）</h2>
+          <p>CNB · cenobamate · 抗癫痫药</p>
+        </div>
+      </div>
+      <div class="product-body">
+        <div class="mode-btn-group">
+          <!-- 实名模式：URL参数 product=cnb&mode=real -->
+          <a class="mode-btn real" href="survey.html?product=cnb&mode=real">
+            <span>
+              实名填写
+              <div class="label-sub">收集姓名 / 医院 / 科室</div>
+            </span>
+            <span class="arrow">›</span>
+          </a>
+          <!-- 匿名模式：URL参数 product=cnb&mode=anon -->
+          <a class="mode-btn anon" href="survey.html?product=cnb&mode=anon">
+            <span>
+              匿名填写
+              <div class="label-sub">不收集个人信息</div>
+            </span>
+            <span class="arrow">›</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SOL 产品问卷 ===== -->
+    <div class="product-card">
+      <div class="product-header sol">
+        <div class="product-icon">☕</div>
+        <div class="product-info">
+          <h2>索安非托（翼朗清®）</h2>
+          <p>SOL · solriamfetol · 促醒药</p>
+        </div>
+      </div>
+      <div class="product-body">
+        <div class="mode-btn-group">
+          <!-- 实名模式：URL参数 product=sol&mode=real -->
+          <a class="mode-btn real" href="survey.html?product=sol&mode=real">
+            <span>
+              实名填写
+              <div class="label-sub">收集姓名 / 医院 / 科室</div>
+            </span>
+            <span class="arrow">›</span>
+          </a>
+          <!-- 匿名模式：URL参数 product=sol&mode=anon -->
+          <a class="mode-btn anon" href="survey.html?product=sol&mode=anon">
+            <span>
+              匿名填写
+              <div class="label-sub">不收集个人信息</div>
+            </span>
+            <span class="arrow">›</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 管理后台入口 ===== -->
+    <a class="admin-entry" href="admin.html">
+      <span class="icon">📊</span>
+      <span>管理后台（数据汇总 / 导出 / 二维码）</span>
+    </a>
+
+  </div>
+
+  <!-- ===== 底部 ===== -->
+  <div class="footer">
+    <p>© 2026 翼思生物医药（上海）有限公司 · Ignis Therapeutics</p>
+    <p style="margin-top:4px;">本平台仅供内部市场调研使用</p>
+  </div>
+
+</body>
+</html>
