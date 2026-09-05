@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>问卷填写 · 翼思生物</title>
+  <style>
+    /* ===== 全局样式 ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #1a3a5c;
+      --primary-light: #2c5282;
+      --accent: #e8732a;
+      --bg: #f5f7fa;
+      --card: #ffffff;
+      --text: #2d3748;
+      --text-light: #718096;
+      --border: #e2e8f0;
+      --success: #38a169;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+    /* ===== 顶部导航 ===== */
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: #fff;
+      padding: 20px 16px;
+      text-align: center;
+    }
+    .header.cnb { background: linear-gradient(135deg, #1a3a5c 0%, #2c5282 100%); }
+    .header.sol { background: linear-gradient(135deg, #b85c1f 0%, #e8732a 100%); }
+    .header h1 { font-size: 1.2rem; font-weight: 600; }
+    .header p { font-size: 0.8rem; opacity: 0.85; margin-top: 4px; }
+    .header .mode-tag {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 3px 12px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      font-size: 0.75rem;
+    }
+    /* ===== 问卷表单 ===== */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px 16px;
+    }
+    .form-intro {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+      color: var(--text-light);
+      line-height: 1.7;
+    }
+    /* ===== 题目卡片 ===== */
+    .question {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .question-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+    .question-num {
+      display: inline-block;
+      width: 24px; height: 24px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 24px;
+      font-size: 0.75rem;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+    .question-header {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .required-mark { color: var(--accent); margin-left: 2px; }
+    /* ===== 选项样式 ===== */
+    .option {
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 0.95rem;
+    }
+    .option:active { background: var(--bg); }
+    .option input { margin-right: 10px; accent-color: var(--primary); }
+    .option.selected {
+      border-color: var(--primary);
+      background: rgba(26,58,92,0.05);
+    }
+    .option.sol-theme.selected {
+      border-color: var(--accent);
+      background: rgba(232,115,42,0.08);
+    }
+    /* ===== 量表样式 ===== */
+    .scale-group {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .scale-item {
+      flex: 1;
+      text-align: center;
+      padding: 10px 4px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 0.9rem;
+    }
+    .scale-item .num { font-size: 1.1rem; font-weight: 600; display: block; }
+    .scale-item .desc { font-size: 0.7rem; color: var(--text-light); }
+    .scale-item:active { background: var(--bg); }
+    .scale-item.selected {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
+    .scale-item.selected .desc { color: rgba(255,255,255,0.8); }
+    .scale-item.sol-theme.selected {
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-top: 6px;
+    }
+    /* ===== 文本框 ===== */
+    .text-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 80px;
+      transition: border-color 0.15s;
+    }
+    .text-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    /* ===== 实名信息字段 ===== */
+    .info-field {
+      margin-bottom: 12px;
+    }
+    .info-field label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .info-field input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+    .info-field input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    /* ===== 提交按钮 ===== */
+    .submit-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--card);
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.1);
+      padding: 12px 16px;
+      z-index: 100;
+    }
+    .submit-btn {
+      display: block;
+      width: 100%;
+      max-width: 568px;
+      margin: 0 auto;
+      padding: 14px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .submit-btn.sol-theme { background: var(--accent); }
+    .submit-btn:active { opacity: 0.85; }
+    .submit-btn:disabled { opacity: 0.5; }
+    /* ===== 成功页 ===== */
+    .success-page {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .success-icon {
+      font-size: 3.5rem;
+      margin-bottom: 16px;
+    }
+    .success-page h2 { font-size: 1.3rem; margin-bottom: 8px; }
+    .success-page p { color: var(--text-light); font-size: 0.9rem; }
+    .back-btn {
+      display: inline-block;
+      margin-top: 24px;
+      padding: 12px 32px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+    /* ===== 响应式 ===== */
+    @media (min-width: 768px) {
+      .header h1 { font-size: 1.4rem; }
+      .container { padding: 32px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== 顶部导航（JS动态填充产品名和模式） ===== -->
+  <div class="header" id="pageHeader">
+    <h1 id="pageTitle">问卷调研</h1>
+    <p id="pageSubtitle"></p>
+    <span class="mode-tag" id="modeTag"></span>
+  </div>
+
+  <!-- ===== 问卷主体 ===== -->
+  <div class="container" id="surveyContainer">
+    <!-- JS动态生成问卷内容 -->
+  </div>
+
+  <!-- ===== 提交按钮（固定底部） ===== -->
+  <div class="submit-bar" id="submitBar" style="display:none;">
+    <button class="submit-btn" id="submitBtn" onclick="submitSurvey()">提交问卷</button>
+  </div>
+
+  <!-- ===== 成功页（提交后显示） ===== -->
+  <div class="container" id="successPage" style="display:none;">
+    <div class="success-page">
+      <div class="success-icon">✅</div>
+      <h2>感谢您的参与！</h2>
+      <p>您的问卷已成功提交</p>
+      <a class="back-btn" href="index.html">返回首页</a>
+    </div>
+  </div>
+
+  <script>
+    /* ============================================================
+     *  问卷题目配置区
+     *  用户可自行修改以下题目内容
+     *  题型支持：single（单选）、multi（多选）、scale（量表1-5）、text（文本）
+     * ============================================================ */
+
+    var SURVEY_CONFIG = {
+      // ===== CNB 西诺氨酯（翼弗瑞®）问卷 =====
+      cnb: {
+        productName: '西诺氨酯（翼弗瑞®）',
+        productCode: 'CNB',
+        intro: '感谢您参与翼弗瑞®（西诺氨酯）市场调研。本问卷约需3分钟，您的反馈对我们至关重要。',
+        questions: [
+          {
+            id: 'q1',
+            type: 'single',
+            title: '您目前每月使用西诺氨酯（翼弗瑞®）的患者数量？',
+            required: true,
+            options: ['0人', '1-5人', '6-10人', '>10人']
+          },
+          {
+            id: 'q2',
+            type: 'single',
+            title: '您最常使用的维持剂量是？',
+            required: true,
+            options: ['100mg/d', '150mg/d', '200mg/d', '其他']
+          },
+          {
+            id: 'q3',
+            type: 'scale',
+            title: '您对翼弗瑞®的整体满意度？',
+            required: true,
+            scaleMin: 1, scaleMax: 5,
+            scaleMinLabel: '非常不满意', scaleMaxLabel: '非常满意'
+          },
+          {
+            id: 'q4',
+            type: 'multi',
+            title: '您认为翼弗瑞®最主要的优势是？（可多选）',
+            required: true,
+            options: ['疗效显著', '起效快', '安全性好', '滴定方案灵活', '与其他AEDs联用协同', '依从性高', '其他']
+          },
+          {
+            id: 'q5',
+            type: 'text',
+            title: '其他意见或建议',
+            required: false,
+            placeholder: '请输入您的意见或建议…'
+          }
+        ]
+      },
+      // ===== SOL 索安非托（翼朗清®）问卷 =====
+      sol: {
+        productName: '索安非托（翼朗清®）',
+        productCode: 'SOL',
+        intro: '感谢您参与翼朗清®（索安非托）市场调研。本问卷约需2分钟，您的反馈对我们至关重要。',
+        questions: [
+          {
+            id: 'q1',
+            type: 'single',
+            title: '您目前每月使用索安非托（翼朗清®）的患者数量？',
+            required: true,
+            options: ['0人', '1-5人', '6-10人', '>10人']
+          },
+          {
+            id: 'q2',
+            type: 'scale',
+            title: '您对翼朗清®的整体满意度？',
+            required: true,
+            scaleMin: 1, scaleMax: 5,
+            scaleMinLabel: '非常不满意', scaleMaxLabel: '非常满意'
+          },
+          {
+            id: 'q3',
+            type: 'text',
+            title: '其他意见或建议',
+            required: false,
+            placeholder: '请输入您的意见或建议…'
+          }
+        ]
+      }
+    };
+
+    /* ============================================================
+     *  解析URL参数：product=cnb|sol, mode=real|anon
+     * ============================================================ */
+    function getUrlParams() {
+      var params = {};
+      var query = window.location.search.substring(1);
+      var pairs = query.split('&');
+      for (var i = 0; i < pairs.length; i++) {
+        var pair = pairs[i].split('=');
+        if (pair[0]) params[pair[0]] = decodeURIComponent(pair[1] || '');
+      }
+      return params;
+    }
+
+    /* ============================================================
+     *  全局状态
+     * ============================================================ */
+    var params = getUrlParams();
+    var productKey = (params.product || 'cnb').toLowerCase();
+    var mode = (params.mode || 'anon').toLowerCase(); // real=实名, anon=匿名
+    var config = SURVEY_CONFIG[productKey] || SURVEY_CONFIG['cnb'];
+    var answers = {}; // 存储用户答案
+
+    /* ============================================================
+     *  渲染问卷页面
+     * ============================================================ */
+    function renderSurvey() {
+      var isSOL = (productKey === 'sol');
+      var themeClass = isSOL ? 'sol' : 'cnb';
+
+      // 填充顶部导航
+      var header = document.getElementById('pageHeader');
+      header.className = 'header ' + themeClass;
+      document.getElementById('pageTitle').textContent = config.productName + ' 调研问卷';
+      document.getElementById('pageSubtitle').textContent = '翼思生物 · ' + config.productCode + ' 市场调研';
+      document.getElementById('modeTag').textContent = (mode === 'real') ? '👤 实名模式' : '🔒 匿名模式';
+
+      var container = document.getElementById('surveyContainer');
+      var html = '';
+
+      // 问卷说明
+      html += '<div class="form-intro">' + config.intro + '</div>';
+
+      // 实名模式：收集姓名/医院/科室
+      if (mode === 'real') {
+        html += '<div class="question">';
+        html += '<div class="question-header"><span class="question-num">i</span><div class="question-title">基本信息<span class="required-mark">*</span></div></div>';
+        html += '<div class="info-field"><label>姓名</label><input type="text" id="real_name" placeholder="请输入您的姓名"></div>';
+        html += '<div class="info-field"><label>医院</label><input type="text" id="real_hospital" placeholder="请输入您所在的医院"></div>';
+        html += '<div class="info-field"><label>科室</label><input type="text" id="real_dept" placeholder="请输入您的科室"></div>';
+        html += '</div>';
+      }
+
+      // 渲染各题目
+      for (var i = 0; i < config.questions.length; i++) {
+        var q = config.questions[i];
+        html += '<div class="question" id="q_' + q.id + '">';
+        html += '<div class="question-header">';
+        html += '<span class="question-num">' + (i + 1) + '</span>';
+        html += '<div class="question-title">' + q.title;
+        if (q.required) html += '<span class="required-mark">*</span>';
+        html += '</div></div>';
+
+        // 根据题型渲染不同输入控件
+        if (q.type === 'single') {
+          // 单选题
+          for (var j = 0; j < q.options.length; j++) {
+            var optId = q.id + '_opt' + j;
+            html += '<label class="option ' + themeClass + '-theme" data-qid="' + q.id + '" data-value="' + q.options[j] + '" onclick="selectSingle(this)">';
+            html += '<input type="radio" name="' + q.id + '" value="' + q.options[j] + '">';
+            html += q.options[j];
+            html += '</label>';
+          }
+        } else if (q.type === 'multi') {
+          // 多选题
+          for (var k = 0; k < q.options.length; k++) {
+            html += '<label class="option ' + themeClass + '-theme" data-qid="' + q.id + '" data-value="' + q.options[k] + '" onclick="toggleMulti(this)">';
+            html += '<input type="checkbox" name="' + q.id + '" value="' + q.options[k] + '">';
+            html += q.options[k];
+            html += '</label>';
+          }
+        } else if (q.type === 'scale') {
+          // 量表题（1-5分）
+          html += '<div class="scale-group">';
+          for (var s = q.scaleMin; s <= q.scaleMax; s++) {
+            html += '<div class="scale-item ' + themeClass + '-theme" data-qid="' + q.id + '" data-value="' + s + '" onclick="selectScale(this)">';
+            html += '<span class="num">' + s + '</span>';
+            html += '</div>';
+          }
+          html += '</div>';
+          html += '<div class="scale-labels"><span>' + (q.scaleMinLabel || '') + '</span><span>' + (q.scaleMaxLabel || '') + '</span></div>';
+        } else if (q.type === 'text') {
+          // 文本题
+          html += '<textarea class="text-input" data-qid="' + q.id + '" placeholder="' + (q.placeholder || '请输入…') + '" oninput="captureText(this)"></textarea>';
+        }
+
+        html += '</div>';
+      }
+
+      container.innerHTML = html;
+      document.getElementById('submitBar').style.display = 'block';
+    }
+
+    /* ============================================================
+     *  交互处理函数
+     * ============================================================ */
+
+    // 单选：点击选项高亮
+    function selectSingle(el) {
+      var qid = el.getAttribute('data-qid');
+      var value = el.getAttribute('data-value');
+      // 清除同组其他选项的高亮
+      var siblings = el.parentNode.querySelectorAll('.option');
+      for (var i = 0; i < siblings.length; i++) {
+        siblings[i].classList.remove('selected');
+        var input = siblings[i].querySelector('input');
+        if (input) input.checked = false;
+      }
+      // 高亮当前选项
+      el.classList.add('selected');
+      var currentInput = el.querySelector('input');
+      if (currentInput) currentInput.checked = true;
+      answers[qid] = value;
+    }
+
+    // 多选：点击选项切换高亮
+    function toggleMulti(el) {
+      var qid = el.getAttribute('data-qid');
+      var value = el.getAttribute('data-value');
+      el.classList.toggle('selected');
+      var input = el.querySelector('input');
+      if (input) input.checked = el.classList.contains('selected');
+
+      // 收集所有选中的值
+      if (!answers[qid]) answers[qid] = [];
+      if (el.classList.contains('selected')) {
+        if (answers[qid].indexOf(value) === -1) answers[qid].push(value);
+      } else {
+        var idx = answers[qid].indexOf(value);
+        if (idx > -1) answers[qid].splice(idx, 1);
+      }
+    }
+
+    // 量表：点击数字高亮
+    function selectScale(el) {
+      var qid = el.getAttribute('data-qid');
+      var value = parseInt(el.getAttribute('data-value'));
+      var siblings = el.parentNode.querySelectorAll('.scale-item');
+      for (var i = 0; i < siblings.length; i++) {
+        siblings[i].classList.remove('selected');
+      }
+      el.classList.add('selected');
+      answers[qid] = value;
+    }
+
+    // 文本：实时捕获输入
+    function captureText(el) {
+      var qid = el.getAttribute('data-qid');
+      answers[qid] = el.value;
+    }
+
+    /* ============================================================
+     *  提交问卷
+     * ============================================================ */
+    function submitSurvey() {
+      // 验证必填题
+      for (var i = 0; i < config.questions.length; i++) {
+        var q = config.questions[i];
+        if (q.required) {
+          var ans = answers[q.id];
+          if (ans === undefined || ans === '' || (Array.isArray(ans) && ans.length === 0)) {
+            alert('请完成第' + (i + 1) + '题：' + q.title);
+            // 滚动到未填写题目
+            var qEl = document.getElementById('q_' + q.id);
+            if (qEl) qEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+          }
+        }
+      }
+
+      // 实名模式验证基本信息
+      if (mode === 'real') {
+        var name = document.getElementById('real_name').value.trim();
+        var hospital = document.getElementById('real_hospital').value.trim();
+        var dept = document.getElementById('real_dept').value.trim();
+        if (!name || !hospital || !dept) {
+          alert('请填写完整的姓名、医院和科室信息');
+          return;
+        }
+        answers['_name'] = name;
+        answers['_hospital'] = hospital;
+        answers['_dept'] = dept;
+      }
+
+      // 构建提交记录
+      var record = {
+        product: productKey,
+        productName: config.productName,
+        mode: mode,
+        timestamp: new Date().toISOString(),
+        submitTime: formatTime(new Date()),
+        answers: JSON.parse(JSON.stringify(answers)) // 深拷贝
+      };
+
+      // ===== 存储到 localStorage（演示用） =====
+      // 实际部署时可替换为后端API提交，详见README.md
+      var storageKey = 'ignis_survey_' + productKey;
+      var records = [];
+      try {
+        var stored = localStorage.getItem(storageKey);
+        if (stored) records = JSON.parse(stored);
+      } catch (e) { console.warn('读取本地数据失败', e); }
+
+      records.push(record);
+      localStorage.setItem(storageKey, JSON.stringify(records));
+
+      // ===== 可选：同步提交到后端（如Google Sheets webhook） =====
+      // 取消下方注释并配置WEBHOOK_URL即可启用
+      // var WEBHOOK_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+      // fetch(WEBHOOK_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(record) });
+
+      // 显示成功页
+      document.getElementById('surveyContainer').style.display = 'none';
+      document.getElementById('submitBar').style.display = 'none';
+      document.getElementById('successPage').style.display = 'block';
+      window.scrollTo(0, 0);
+    }
+
+    /* ============================================================
+     *  辅助函数：格式化时间
+     * ============================================================ */
+    function formatTime(date) {
+      var y = date.getFullYear();
+      var m = ('0' + (date.getMonth() + 1)).slice(-2);
+      var d = ('0' + date.getDate()).slice(-2);
+      var h = ('0' + date.getHours()).slice(-2);
+      var min = ('0' + date.getMinutes()).slice(-2);
+      return y + '-' + m + '-' + d + ' ' + h + ':' + min;
+    }
+
+    /* ============================================================
+     *  页面初始化
+     * ============================================================ */
+    renderSurvey();
+  </script>
+
+</body>
+</html>
