@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 · 翼思生物问卷平台</title>
+  <!-- ===== CDN: Chart.js（图表） ===== -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- ===== CDN: SheetJS（Excel导出） ===== -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- ===== CDN: qrcode.js（二维码生成） ===== -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    /* ===== 全局样式 ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #1a3a5c;
+      --primary-light: #2c5282;
+      --accent: #e8732a;
+      --bg: #f5f7fa;
+      --card: #ffffff;
+      --text: #2d3748;
+      --text-light: #718096;
+      --border: #e2e8f0;
+      --success: #38a169;
+      --danger: #e53e3e;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    /* ===== 顶部导航 ===== */
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: #fff;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .header h1 { font-size: 1.1rem; font-weight: 600; }
+    .header .icon { font-size: 1.3rem; }
+    .header-right { display: flex; gap: 8px; }
+    .header a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.85rem;
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .header a:hover { background: rgba(255,255,255,0.25); }
+    /* ===== 密码登录页 ===== */
+    .login-page {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 80vh;
+      padding: 20px;
+    }
+    .login-card {
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 40px 32px;
+      max-width: 360px;
+      width: 100%;
+      text-align: center;
+    }
+    .login-card .lock-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .login-card h2 { font-size: 1.2rem; margin-bottom: 8px; }
+    .login-card p { font-size: 0.85rem; color: var(--text-light); margin-bottom: 24px; }
+    .login-card input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 16px;
+      font-family: inherit;
+    }
+    .login-card input:focus { outline: none; border-color: var(--primary); }
+    .login-card button {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .login-card button:active { opacity: 0.85; }
+    .login-error { color: var(--danger); font-size: 0.85rem; margin-top: 8px; display: none; }
+    /* ===== 主内容区 ===== */
+    .container { max-width: 1000px; margin: 0 auto; padding: 20px 16px; }
+    /* ===== Tab切换 ===== */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      background: var(--card);
+      border-radius: 10px;
+      padding: 4px;
+      box-shadow: var(--shadow);
+    }
+    .tab {
+      flex: 1;
+      padding: 10px 8px;
+      text-align: center;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--text-light);
+      border: none;
+      background: none;
+      font-family: inherit;
+    }
+    .tab.active { background: var(--primary); color: #fff; }
+    .tab:active { opacity: 0.85; }
+    /* ===== 统计卡片 ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--card);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-card .num { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
+    .stat-card .label { font-size: 0.8rem; color: var(--text-light); margin-top: 4px; }
+    .stat-card.accent .num { color: var(--accent); }
+    /* ===== 图表容器 ===== */
+    .chart-section {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .chart-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--primary);
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .chart-wrapper {
+      position: relative;
+      width: 100%;
+      max-height: 300px;
+    }
+    .chart-wrapper canvas { max-height: 300px; }
+    /* ===== 数据表格 ===== */
+    .data-section {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+    .data-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--primary);
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th { background: var(--bg); padding: 10px 8px; text-align: left; font-weight: 600; color: var(--text); white-space: nowrap; }
+    td { padding: 10px 8px; border-top: 1px solid var(--border); color: var(--text); }
+    tr:hover { background: var(--bg); }
+    /* ===== 二维码区域 ===== */
+    .qr-section {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .qr-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--primary);
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .qr-card {
+      text-align: center;
+      padding: 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+    }
+    .qr-card .qr-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; }
+    .qr-card .qr-box {
+      display: inline-block;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .qr-card .qr-box img,
+    .qr-card .qr-box canvas { display: block; margin: 0 auto; }
+    .qr-card .qr-url {
+      font-size: 0.7rem;
+      color: var(--text-light);
+      margin-top: 8px;
+      word-break: break-all;
+    }
+    .qr-card .download-btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 16px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .qr-card .download-btn:active { opacity: 0.85; }
+    /* ===== 操作按钮 ===== */
+    .action-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .action-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      font-family: inherit;
+    }
+    .action-btn:active { opacity: 0.85; }
+    .action-btn.export { background: var(--success); color: #fff; }
+    .action-btn.clear { background: var(--danger); color: #fff; }
+    .action-btn.demo { background: var(--accent); color: #fff; }
+    /* ===== 空状态 ===== */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-light);
+    }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    /* ===== 响应式 ===== */
+    @media (max-width: 600px) {
+      .header { flex-direction: column; align-items: flex-start; }
+      .header-right { width: 100%; }
+      .header a { flex: 1; text-align: center; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== 顶部导航 ===== -->
+  <div class="header">
+    <div class="header-left">
+      <span class="icon">📊</span>
+      <h1>问卷管理后台</h1>
+    </div>
+    <div class="header-right">
+      <a href="index.html">← 返回首页</a>
+      <a href="javascript:logout()" id="logoutBtn" style="display:none;">退出登录</a>
+    </div>
+  </div>
+
+  <!-- ===== 密码登录页 ===== -->
+  <div class="login-page" id="loginPage">
+    <div class="login-card">
+      <div class="lock-icon">🔒</div>
+      <h2>管理后台登录</h2>
+      <p>请输入管理密码</p>
+      <input type="password" id="pwdInput" placeholder="管理密码" onkeydown="if(event.key==='Enter')checkLogin()">
+      <button onclick="checkLogin()">进入后台</button>
+      <div class="login-error" id="loginError">密码错误，请重试</div>
+    </div>
+  </div>
+
+  <!-- ===== 后台主内容（登录后显示） ===== -->
+  <div class="container" id="adminContent" style="display:none;">
+
+    <!-- ===== Tab切换 ===== -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('cnb', this)">💊 CNB 翼弗瑞®</button>
+      <button class="tab" onclick="switchTab('sol', this)">☕ SOL 翼朗清®</button>
+    </div>
+
+    <!-- ===== 操作按钮栏 ===== -->
+    <div class="action-bar">
+      <button class="action-btn export" onclick="exportExcel()">📥 导出Excel</button>
+      <button class="action-btn demo" onclick="loadDemoData()">✨ 加载演示数据</button>
+      <button class="action-btn clear" onclick="clearData()">🗑️ 清空数据</button>
+    </div>
+
+    <!-- ===== 统计卡片 ===== -->
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <!-- ===== 图表区 ===== -->
+    <div id="chartsArea"></div>
+
+    <!-- ===== 数据明细表 ===== -->
+    <div class="data-section" id="dataTableSection">
+      <h3>📋 填写明细</h3>
+      <div id="dataTableWrapper"></div>
+    </div>
+
+    <!-- ===== 二维码区 ===== -->
+    <div class="qr-section">
+      <h3>📱 问卷二维码</h3>
+      <div class="qr-grid" id="qrGrid"></div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ============================================================
+     *  管理后台配置
+     * ============================================================ */
+    var ADMIN_PASSWORD = 'ignis2026'; // 默认密码，可修改
+
+    // 产品配置（与survey.html保持一致）
+    var PRODUCTS = {
+      cnb: {
+        name: '西诺氨酯（翼弗瑞®）',
+        code: 'CNB',
+        color: '#1a3a5c',
+        questions: [
+          { id: 'q1', type: 'single', title: '每月使用患者数量', options: ['0人', '1-5人', '6-10人', '>10人'] },
+          { id: 'q2', type: 'single', title: '最常使用维持剂量', options: ['100mg/d', '150mg/d', '200mg/d', '其他'] },
+          { id: 'q3', type: 'scale', title: '整体满意度（1-5分）' },
+          { id: 'q4', type: 'multi', title: '最主要优势', options: ['疗效显著', '起效快', '安全性好', '滴定方案灵活', '与其他AEDs联用协同', '依从性高', '其他'] },
+          { id: 'q5', type: 'text', title: '其他意见' }
+        ]
+      },
+      sol: {
+        name: '索安非托（翼朗清®）',
+        code: 'SOL',
+        color: '#e8732a',
+        questions: [
+          { id: 'q1', type: 'single', title: '每月使用患者数量', options: ['0人', '1-5人', '6-10人', '>10人'] },
+          { id: 'q2', type: 'scale', title: '整体满意度（1-5分）' },
+          { id: 'q3', type: 'text', title: '其他意见' }
+        ]
+      }
+    };
+
+    var currentTab = 'cnb';
+    var charts = {}; // 存储Chart实例，切换时销毁
+
+    /* ============================================================
+     *  密码登录
+     * ============================================================ */
+    function checkLogin() {
+      var input = document.getElementById('pwdInput').value;
+      if (input === ADMIN_PASSWORD) {
+        sessionStorage.setItem('ignis_admin_authed', 'true');
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('adminContent').style.display = 'block';
+        document.getElementById('logoutBtn').style.display = 'inline-block';
+        renderAll();
+      } else {
+        document.getElementById('loginError').style.display = 'block';
+        document.getElementById('pwdInput').value = '';
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem('ignis_admin_authed');
+      location.reload();
+    }
+
+    // 检查登录状态
+    (function checkAuth() {
+      if (sessionStorage.getItem('ignis_admin_authed') === 'true') {
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('adminContent').style.display = 'block';
+        document.getElementById('logoutBtn').style.display = 'inline-block';
+      }
+    })();
+
+    /* ============================================================
+     *  数据读取
+     * ============================================================ */
+    function getRecords(product) {
+      var key = 'ignis_survey_' + product;
+      try {
+        var stored = localStorage.getItem(key);
+        return stored ? JSON.parse(stored) : [];
+      } catch (e) {
+        console.warn('读取数据失败', e);
+        return [];
+      }
+    }
+
+    function getAllRecords() {
+      return getRecords(currentTab);
+    }
+
+    /* ============================================================
+     *  Tab切换
+     * ============================================================ */
+    function switchTab(product, el) {
+      // 销毁旧图表
+      for (var key in charts) {
+        if (charts[key]) { charts[key].destroy(); charts[key] = null; }
+      }
+      currentTab = product;
+      // 更新Tab高亮
+      var tabs = document.querySelectorAll('.tab');
+      for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+      el.classList.add('active');
+      renderAll();
+    }
+
+    /* ============================================================
+     *  渲染全部内容
+     * ============================================================ */
+    function renderAll() {
+      renderStats();
+      renderCharts();
+      renderDataTable();
+      renderQRCode();
+    }
+
+    /* ============================================================
+     *  渲染统计卡片
+     * ============================================================ */
+    function renderStats() {
+      var records = getAllRecords();
+      var realCount = 0, anonCount = 0;
+      for (var i = 0; i < records.length; i++) {
+        if (records[i].mode === 'real') realCount++;
+        else anonCount++;
+      }
+      var html = '';
+      html += '<div class="stat-card"><div class="num">' + records.length + '</div><div class="label">总填写数</div></div>';
+      html += '<div class="stat-card accent"><div class="num">' + realCount + '</div><div class="label">实名填写</div></div>';
+      html += '<div class="stat-card"><div class="num">' + anonCount + '</div><div class="label">匿名填写</div></div>';
+      html += '<div class="stat-card"><div class="num">' + PRODUCTS[currentTab].code + '</div><div class="label">当前产品</div></div>';
+      document.getElementById('statsGrid').innerHTML = html;
+    }
+
+    /* ============================================================
+     *  渲染图表
+     * ============================================================ */
+    function renderCharts() {
+      var records = getAllRecords();
+      var questions = PRODUCTS[currentTab].questions;
+      var chartsArea = document.getElementById('chartsArea');
+      var html = '';
+
+      if (records.length === 0) {
+        chartsArea.innerHTML = '<div class="chart-section"><div class="empty-state"><div class="icon">📭</div><p>暂无数据，请先加载演示数据或等待问卷填写</p></div></div>';
+        return;
+      }
+
+      for (var i = 0; i < questions.length; i++) {
+        var q = questions[i];
+        if (q.type === 'single' || q.type === 'multi') {
+          // 选项分布图（柱状图）
+          var distribution = {};
+          var optionList = q.options || [];
+          for (var j = 0; j < optionList.length; j++) {
+            distribution[optionList[j]] = 0;
+          }
+          for (var r = 0; r < records.length; r++) {
+            var ans = records[r].answers[q.id];
+            if (ans) {
+              if (Array.isArray(ans)) {
+                for (var k = 0; k < ans.length; k++) {
+                  if (distribution[ans[k]] !== undefined) distribution[ans[k]]++;
+                }
+              } else {
+                if (distribution[ans] !== undefined) distribution[ans]++;
+              }
+            }
+          }
+          html += '<div class="chart-section">';
+          html += '<h3>Q' + (i + 1) + '. ' + q.title + '</h3>';
+          html += '<div class="chart-wrapper"><canvas id="chart_' + q.id + '"></canvas></div>';
+          html += '</div>';
+        } else if (q.type === 'scale') {
+          // 量表分布图（柱状图）
+          var scaleDist = {1:0, 2:0, 3:0, 4:0, 5:0};
+          for (var r2 = 0; r2 < records.length; r2++) {
+            var sAns = records[r2].answers[q.id];
+            if (sAns && scaleDist[sAns] !== undefined) scaleDist[sAns]++;
+          }
+          html += '<div class="chart-section">';
+          html += '<h3>Q' + (i + 1) + '. ' + q.title + '</h3>';
+          html += '<div class="chart-wrapper"><canvas id="chart_' + q.id + '"></canvas></div>';
+          html += '</div>';
+        }
+        // text类型不生成图表
+      }
+
+      chartsArea.innerHTML = html;
+
+      // 创建Chart实例
+      for (var i2 = 0; i2 < questions.length; i2++) {
+        var q2 = questions[i2];
+        var canvasId = 'chart_' + q2.id;
+        var canvas = document.getElementById(canvasId);
+        if (!canvas) continue;
+
+        if (q2.type === 'single' || q2.type === 'multi') {
+          var dist2 = {};
+          var opts = q2.options || [];
+          for (var j2 = 0; j2 < opts.length; j2++) dist2[opts[j2]] = 0;
+          for (var r3 = 0; r3 < records.length; r3++) {
+            var a = records[r3].answers[q2.id];
+            if (a) {
+              if (Array.isArray(a)) {
+                for (var m = 0; m < a.length; m++) { if (dist2[a[m]] !== undefined) dist2[a[m]]++; }
+              } else { if (dist2[a] !== undefined) dist2[a]++; }
+            }
+          }
+          var labels = Object.keys(dist2);
+          var data = Object.values(dist2);
+          charts[q2.id] = new Chart(canvas, {
+            type: 'bar',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: '填写人数',
+                data: data,
+                backgroundColor: PRODUCTS[currentTab].color,
+                borderRadius: 6
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+          });
+        } else if (q2.type === 'scale') {
+          var sDist = {1:0, 2:0, 3:0, 4:0, 5:0};
+          for (var r4 = 0; r4 < records.length; r4++) {
+            var sA = records[r4].answers[q2.id];
+            if (sA && sDist[sA] !== undefined) sDist[sA]++;
+          }
+          charts[q2.id] = new Chart(canvas, {
+            type: 'bar',
+            data: {
+              labels: ['1分', '2分', '3分', '4分', '5分'],
+              datasets: [{
+                label: '填写人数',
+                data: [sDist[1], sDist[2], sDist[3], sDist[4], sDist[5]],
+                backgroundColor: ['#e53e3e', '#dd6b20', '#d69e2e', '#38a169', '#319795'],
+                borderRadius: 6
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+          });
+        }
+      }
+    }
+
+    /* ============================================================
+     *  渲染数据明细表
+     * ============================================================ */
+    function renderDataTable() {
+      var records = getAllRecords();
+      var questions = PRODUCTS[currentTab].questions;
+      var wrapper = document.getElementById('dataTableWrapper');
+
+      if (records.length === 0) {
+        wrapper.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>暂无填写记录</p></div>';
+        return;
+      }
+
+      var html = '<table><thead><tr>';
+      html += '<th>序号</th>';
+      html += '<th>提交时间</th>';
+      html += '<th>模式</th>';
+      // 实名列
+      var hasReal = records.some(function(r) { return r.mode === 'real'; });
+      if (hasReal) {
+        html += '<th>姓名</th><th>医院</th><th>科室</th>';
+      }
+      for (var i = 0; i < questions.length; i++) {
+        html += '<th>Q' + (i + 1) + '</th>';
+      }
+      html += '</tr></thead><tbody>';
+
+      for (var r = 0; r < records.length; r++) {
+        var rec = records[r];
+        html += '<tr>';
+        html += '<td>' + (r + 1) + '</td>';
+        html += '<td>' + (rec.submitTime || rec.timestamp || '') + '</td>';
+        html += '<td>' + (rec.mode === 'real' ? '实名' : '匿名') + '</td>';
+        if (hasReal) {
+          html += '<td>' + (rec.answers._name || '-') + '</td>';
+          html += '<td>' + (rec.answers._hospital || '-') + '</td>';
+          html += '<td>' + (rec.answers._dept || '-') + '</td>';
+        }
+        for (var q = 0; q < questions.length; q++) {
+          var ans = rec.answers[questions[q].id];
+          if (ans === undefined || ans === '') {
+            html += '<td>-</td>';
+          } else if (Array.isArray(ans)) {
+            html += '<td>' + ans.join(', ') + '</td>';
+          } else {
+            html += '<td>' + ans + '</td>';
+          }
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      wrapper.innerHTML = html;
+    }
+
+    /* ============================================================
+     *  渲染二维码
+     * ============================================================ */
+    function renderQRCode() {
+      // 获取当前页面URL的base路径
+      var baseUrl = window.location.href.replace('admin.html', '');
+      var qrGrid = document.getElementById('qrGrid');
+      var html = '';
+
+      var qrConfigs = [
+        { label: 'CNB 实名', url: baseUrl + 'survey.html?product=cnb&mode=real', color: '#1a3a5c' },
+        { label: 'CNB 匿名', url: baseUrl + 'survey.html?product=cnb&mode=anon', color: '#1a3a5c' },
+        { label: 'SOL 实名', url: baseUrl + 'survey.html?product=sol&mode=real', color: '#e8732a' },
+        { label: 'SOL 匿名', url: baseUrl + 'survey.html?product=sol&mode=anon', color: '#e8732a' }
+      ];
+
+      for (var i = 0; i < qrConfigs.length; i++) {
+        var qc = qrConfigs[i];
+        html += '<div class="qr-card">';
+        html += '<div class="qr-title">' + qc.label + '</div>';
+        html += '<div class="qr-box" id="qrbox_' + i + '"></div>';
+        html += '<div class="qr-url">' + qc.url + '</div>';
+        html += '<button class="download-btn" onclick="downloadQR(' + i + ', \'' + qc.label + '\')">下载PNG</button>';
+        html += '</div>';
+      }
+      qrGrid.innerHTML = html;
+
+      // 生成二维码
+      for (var j = 0; j < qrConfigs.length; j++) {
+        var box = document.getElementById('qrbox_' + j);
+        if (box) {
+          // 清空旧内容
+          box.innerHTML = '';
+          new QRCode(box, {
+            text: qrConfigs[j].url,
+            width: 160,
+            height: 160,
+            colorDark: qrConfigs[j].color,
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        }
+      }
+    }
+
+    /* ============================================================
+     *  下载二维码PNG
+     * ============================================================ */
+    function downloadQR(index, label) {
+      var box = document.getElementById('qrbox_' + index);
+      if (!box) return;
+      var canvas = box.querySelector('canvas');
+      var img = box.querySelector('img');
+      var source = canvas || img;
+      if (!source) { alert('二维码未生成'); return; }
+
+      // 如果是canvas直接下载，如果是img则用src
+      var dataUrl;
+      if (canvas) {
+        dataUrl = canvas.toDataURL('image/png');
+      } else {
+        dataUrl = img.src;
+      }
+
+      var a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = 'QR_' + label.replace(/\s/g, '_') + '.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    /* ============================================================
+     *  导出Excel
+     * ============================================================ */
+    function exportExcel() {
+      var records = getAllRecords();
+      if (records.length === 0) {
+        alert('当前无数据可导出');
+        return;
+      }
+
+      var questions = PRODUCTS[currentTab].questions;
+      var hasReal = records.some(function(r) { return r.mode === 'real'; });
+
+      // 构建表头
+      var headers = ['序号', '提交时间', '模式'];
+      if (hasReal) headers = headers.concat(['姓名', '医院', '科室']);
+      for (var i = 0; i < questions.length; i++) {
+        headers.push('Q' + (i + 1) + '. ' + questions[i].title);
+      }
+
+      // 构建数据行
+      var rows = [];
+      for (var r = 0; r < records.length; r++) {
+        var rec = records[r];
+        var row = [r + 1, rec.submitTime || rec.timestamp || '', rec.mode === 'real' ? '实名' : '匿名'];
+        if (hasReal) {
+          row.push(rec.answers._name || '');
+          row.push(rec.answers._hospital || '');
+          row.push(rec.answers._dept || '');
+        }
+        for (var q = 0; q < questions.length; q++) {
+          var ans = rec.answers[questions[q].id];
+          if (ans === undefined || ans === '') {
+            row.push('');
+          } else if (Array.isArray(ans)) {
+            row.push(ans.join(', '));
+          } else {
+            row.push(ans);
+          }
+        }
+        rows.push(row);
+      }
+
+      // 创建工作表
+      var wsData = [headers].concat(rows);
+      var ws = XLSX.utils.aoa_to_sheet(wsData);
+      // 设置列宽
+      var colWidths = [];
+      for (var c = 0; c < headers.length; c++) {
+        colWidths.push({ wch: 20 });
+      }
+      ws['!cols'] = colWidths;
+
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, PRODUCTS[currentTab].code + '_调研数据');
+      var fileName = PRODUCTS[currentTab].code + '_survey_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+      XLSX.writeFile(wb, fileName);
+    }
+
+    /* ============================================================
+     *  加载演示数据
+     * ============================================================ */
+    function loadDemoData() {
+      if (!confirm('确定加载演示数据？这将追加到现有数据中。')) return;
+
+      var product = currentTab;
+      var key = 'ignis_survey_' + product;
+      var existing = [];
+      try { var s = localStorage.getItem(key); if (s) existing = JSON.parse(s); } catch (e) {}
+
+      var demoRecords = generateDemoData(product);
+      var combined = existing.concat(demoRecords);
+      localStorage.setItem(key, JSON.stringify(combined));
+      renderAll();
+      alert('已加载 ' + demoRecords.length + ' 条演示数据');
+    }
+
+    function generateDemoData(product) {
+      var records = [];
+      var now = new Date();
+      var names = ['张医生', '李医生', '王医生', '刘医生', '陈医生', '杨医生', '赵医生', '黄医生'];
+      var hospitals = ['北京协和医院', '上海华山医院', '广州中山一院', '武汉同济医院', '四川华西医院', '浙江大学附二院'];
+      var depts = ['神经内科', '癫痫中心', '神经外科', '儿科神经'];
+
+      var count = 8 + Math.floor(Math.random() * 5);
+      for (var i = 0; i < count; i++) {
+        var isReal = Math.random() > 0.4;
+        var time = new Date(now.getTime() - Math.random() * 7 * 24 * 60 * 60 * 1000);
+        var answers = {};
+
+        if (product === 'cnb') {
+          answers.q1 = ['0人', '1-5人', '6-10人', '>10人'][Math.floor(Math.random() * 4)];
+          answers.q2 = ['100mg/d', '150mg/d', '200mg/d', '其他'][Math.floor(Math.random() * 4)];
+          answers.q3 = Math.floor(Math.random() * 5) + 1;
+          // 多选
+          var allOpts = ['疗效显著', '起效快', '安全性好', '滴定方案灵活', '与其他AEDs联用协同', '依从性高', '其他'];
+          var multi = [];
+          var numMulti = 1 + Math.floor(Math.random() * 3);
+          for (var m = 0; m < numMulti; m++) {
+            var pick = allOpts[Math.floor(Math.random() * allOpts.length)];
+            if (multi.indexOf(pick) === -1) multi.push(pick);
+          }
+          answers.q4 = multi;
+          answers.q5 = Math.random() > 0.5 ? '希望增加更多临床数据支持' : '';
+        } else {
+          answers.q1 = ['0人', '1-5人', '6-10人', '>10人'][Math.floor(Math.random() * 4)];
+          answers.q2 = Math.floor(Math.random() * 5) + 1;
+          answers.q3 = Math.random() > 0.5 ? '期待更多适应症拓展' : '';
+        }
+
+        if (isReal) {
+          answers._name = names[Math.floor(Math.random() * names.length)];
+          answers._hospital = hospitals[Math.floor(Math.random() * hospitals.length)];
+          answers._dept = depts[Math.floor(Math.random() * depts.length)];
+        }
+
+        records.push({
+          product: product,
+          productName: PRODUCTS[product].name,
+          mode: isReal ? 'real' : 'anon',
+          timestamp: time.toISOString(),
+          submitTime: formatTime(time),
+          answers: answers
+        });
+      }
+      return records;
+    }
+
+    /* ============================================================
+     *  清空数据
+     * ============================================================ */
+    function clearData() {
+      if (!confirm('确定清空当前产品（' + PRODUCTS[currentTab].name + '）的所有数据？此操作不可恢复！')) return;
+      localStorage.removeItem('ignis_survey_' + currentTab);
+      renderAll();
+      alert('数据已清空');
+    }
+
+    /* ============================================================
+     *  辅助函数
+     * ============================================================ */
+    function formatTime(date) {
+      var y = date.getFullYear();
+      var m = ('0' + (date.getMonth() + 1)).slice(-2);
+      var d = ('0' + date.getDate()).slice(-2);
+      var h = ('0' + date.getHours()).slice(-2);
+      var min = ('0' + date.getMinutes()).slice(-2);
+      return y + '-' + m + '-' + d + ' ' + h + ':' + min;
+    }
+
+    // 如果已登录，初始化渲染
+    if (sessionStorage.getItem('ignis_admin_authed') === 'true') {
+      renderAll();
+    }
+  </script>
+
+</body>
+</html>
